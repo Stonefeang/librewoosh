@@ -70,17 +70,17 @@ struct MinCost {
 		if (v==uj)
 			return lim;
 		bylo[v]=1;
-		int ret=0;
 		for (int i=0; i<(int)graf[v].size() && lim; i++) {
 			if (!bylo[graf[v][i].cel] && (*graf[v][i].prze1) && odl[v]+graf[v][i].koszt==odl[graf[v][i].cel]) {
 				int wez=dfs(graf[v][i].cel, min(lim, *graf[v][i].prze1));
-				(*graf[v][i].prze1)-=wez;
-				(*graf[v][i].prze2)+=wez;
-				lim-=wez;
-				ret+=wez;
+				if (wez) {
+					(*graf[v][i].prze1)-=wez;
+					(*graf[v][i].prze2)+=wez;
+					return wez;
+				}
 			}
 		}
-		return ret;
+		return 0;
 	}
 	pair <int,ll> flow(int zrzr, int ujuj, bool use_dijkstra=true) {
 		zr=zrzr; uj=ujuj;
