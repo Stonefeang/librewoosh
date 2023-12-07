@@ -70,7 +70,7 @@ struct MinCost {
 		if (v==uj)
 			return lim;
 		bylo[v]=1;
-		for (int i=0; i<(int)graf[v].size() && lim; i++) {
+		for (int i=0; i<(int)graf[v].size(); i++) {
 			if (!bylo[graf[v][i].cel] && (*graf[v][i].prze1) && odl[v]+graf[v][i].koszt==odl[graf[v][i].cel]) {
 				int wez=dfs(graf[v][i].cel, min(lim, *graf[v][i].prze1));
 				if (wez) {
