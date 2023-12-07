@@ -60,7 +60,7 @@ struct Matching {//numeracja od 1, skojarzenie znajduje sie w wektorze nxt
 		int ret = 0;
 		for (int i = 1; i <= n; i++)
 			if (!nxt[i])
-				ret+=match(i);
+				ret += match(i);
 		return ret;
 	}
 };
