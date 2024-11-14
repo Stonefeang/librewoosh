@@ -42,8 +42,7 @@ pair<ll, vector<int>> directed_mst(int n, int r, vector<Edge> &g) {
 	RollbackUF uf(n);
 	vector<Node*> heap(n);
 	vector<Node> pool(g.size());
-	for (int i=0; i<(int)g.size(); i++)
-	{
+	for (int i=0; i<(int)g.size(); i++) {
 		Edge e = g[i];
 		heap[e.b] = merge(heap[e.b], &(pool[i] = Node{e}));
 	}
