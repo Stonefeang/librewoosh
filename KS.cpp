@@ -16,6 +16,7 @@ void ksRadixPass(const vi&src, vi&dest, int size, const vi&keys, int K){
     pos++;
   }
 }
+
 void ksSuffixArray(const vi& src, vi& dest, int N, int K){
   int n0 = (N + 2) / 3, n2 = N / 3, n02 = n0 + n2;
   vi src12(n02 + 3, 0), dest12(n02 + 3, 0), src0(n0, 0), dest0(n0, 0);
@@ -76,6 +77,7 @@ void ksSuffixArray(const vi& src, vi& dest, int N, int K){
     }
   }
 }
+
 vi suffixArray(vi source) {
   int N = source.size(), K = *max_element(source.begin(), source.end());
   if (N == 1) { return {0}; }
