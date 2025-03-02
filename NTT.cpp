@@ -214,3 +214,67 @@ pair<vll,vll> divide(const vll a, const vll &b)//{div, mod}
 	ret=modulo(ret, r);
 	return {ret, a-b*ret};
 }
+
+vll multipoint_evaluation(const vll &w, const vll &points)
+{
+	if (points.empty())
+		return {};
+	vector <vll> help;
+	vll res;
+	function<void(int, int, int)> precalc=[&](int v, int a, int b)
+	{
+		if ((int)help.size()<=v) help.resize(v+1);
+		if (a==b)
+		{
+			help[v]={(mod-points[a])%mod, 1};
+			return;
+		}
+		precalc((v<<1), a, (a+b)>>1);
+		precalc((v<<1)^1, (a+b+2)>>1, b);
+		help[v]=(help[v*2]*help[v*2+1]);
+	};
+	function<void(int, vll)> calc=[&](int v, vll wek)
+	{
+		wek=divide(wek, help[v]).second;
+		if ((int)help[v].size()==2)
+		{
+			res.push_back(wek.empty() ? 0 : wek[0]);
+			return;
+		}
+		calc((v<<1), wek);
+		calc((v<<1)^1, wek);
+	};
+	precalc(1, 0, (int)points.size()-1);
+	calc(1, norm(w));
+	return res;
+}
+
+vll interpolate(const vector<pll> &points)
+{
+	if (points.empty())
+		return {};
+	vector <vll> help;
+	function<void(int, int, int)> precalc=[&](int v, int a, int b)
+	{
+		if ((int)help.size()<=v) help.resize(v+1);
+		if (a==b)
+		{
+			help[v]={(mod-points[a].first)%mod, 1};
+			return;
+		}
+		precalc((v<<1), a, (a+b)>>1);
+		precalc((v<<1)^1, (a+b+2)>>1, b);
+		help[v]=(help[v*2]*help[v*2+1]);
+	};
+	function<vll(int, int, int, vll)> calc=[&](int v, int a, int b, vll wek)
+	{
+		wek=divide(wek, help[v]).second;
+		if (a==b)
+			return norm({points[a].second*inv(wek[0])});
+		vll l=calc((v<<1), a, (a+b)>>1, wek*help[(v<<1)^1]);
+		vll r=calc((v<<1)^1, (a+b+2)>>1, b, wek*help[(v<<1)]);
+		return (l*help[(v<<1)^1])+(r*help[(v<<1)]);
+	};
+	precalc(1, 0, (int)points.size()-1);
+	return calc(1, 0, (int)points.size()-1, {1});
+}
