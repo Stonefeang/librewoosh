@@ -292,47 +292,27 @@ vector<vll> transpose(const vector<vll> &a)
 	return ret;
 }
 
-vector<vll> operator *(vector<vll> a, vector<vll> b)
+vector<vll> operator *(const vector<vll> &a, const vector<vll> &b)
 {
-	static ntt my_ntt;
 	if (a.empty() || b.empty())
 		return {};
 	int oa=(int)a.size()+(int)b.size()-1;
 	int ob=(int)a[0].size()+(int)b[0].size()-1;
-	int ra=my_ntt.lift(oa);
-	int rb=my_ntt.lift(ob);
-	a.resize(ra);
-	b.resize(ra);
-	for (int i=0; i<ra; i++)
-	{
-		a[i].resize(rb);
-		b[i].resize(rb);
-		my_ntt.dft(a[i], 0);
-		my_ntt.dft(b[i], 0);
-	}
-	a=transpose(a);
-	b=transpose(b);
-	for (int i=0; i<rb; i++)
-	{
-		my_ntt.dft(a[i], 0);
-		my_ntt.dft(b[i], 0);
-		for (int j=0; j<ra; j++)
-			a[i][j]=(a[i][j]*b[i][j])%mod;
-		my_ntt.dft(a[i], 1);
-	}
-	a=transpose(a);
-	b=transpose(b);
-	for (int i=0; i<ra; i++)
-		my_ntt.dft(a[i], 1);
-	ll div=inv(ra)*inv(rb)%mod;
-	a.resize(oa);
+	vll pa(oa*ob);
+	vll pb(oa*ob);
+	for (int i=0; i<(int)a.size(); i++)
+		for (int j=0; j<(int)a[i].size(); j++)
+			pa[i*ob+j]=a[i][j];
+	for (int i=0; i<(int)b.size(); i++)
+		for (int j=0; j<(int)b[i].size(); j++)
+			pb[i*ob+j]=b[i][j];
+	vll pc=pa*pb;
+	pc.resize(oa*ob);
+	vector<vll> ret(oa, vll(ob));
 	for (int i=0; i<oa; i++)
-	{
-		a[i].resize(ob);
 		for (int j=0; j<ob; j++)
-			a[i][j]=(a[i][j]*div)%mod;
-	}
-	return a;
+			ret[i][j]=pc[i*ob+j];
+	return ret;
 }
 
 vll power_projection(const vll &a, const vll &b, int n)
