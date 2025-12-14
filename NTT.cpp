@@ -87,7 +87,7 @@ struct ntt
 	{
 		if (a.empty() || b.empty())
 			return {};
-		int n=lift(a.size()+b.size());
+		int n=lift((int)a.size()+(int)b.size()-1);
 		a.resize(n);
 		b.resize(n);
 		dft(a, 0);
@@ -277,4 +277,104 @@ vll interpolate(const vector<pll> &points)
 	};
 	precalc(1, 0, (int)points.size()-1);
 	return calc(1, 0, (int)points.size()-1, {1});
+}
+
+vector<vll> transpose(const vector<vll> &a)
+{
+	if (a.empty())
+		return {};
+	int ra=a.size();
+	int rb=a[0].size();
+	vector<vll> ret(rb, vll(ra));
+	for (int i=0; i<ra; i++)
+		for (int j=0; j<rb; j++)
+			ret[j][i]=a[i][j];
+	return ret;
+}
+
+vector<vll> operator *(vector<vll> a, vector<vll> b)
+{
+	static ntt my_ntt;
+	if (a.empty() || b.empty())
+		return {};
+	int oa=(int)a.size()+(int)b.size()-1;
+	int ob=(int)a[0].size()+(int)b[0].size()-1;
+	int ra=my_ntt.lift(oa);
+	int rb=my_ntt.lift(ob);
+	a.resize(ra);
+	b.resize(ra);
+	for (int i=0; i<ra; i++)
+	{
+		a[i].resize(rb);
+		b[i].resize(rb);
+		my_ntt.dft(a[i], 0);
+		my_ntt.dft(b[i], 0);
+	}
+	a=transpose(a);
+	b=transpose(b);
+	for (int i=0; i<rb; i++)
+	{
+		my_ntt.dft(a[i], 0);
+		my_ntt.dft(b[i], 0);
+		for (int j=0; j<ra; j++)
+			a[i][j]=(a[i][j]*b[i][j])%mod;
+		my_ntt.dft(a[i], 1);
+	}
+	a=transpose(a);
+	b=transpose(b);
+	for (int i=0; i<ra; i++)
+		my_ntt.dft(a[i], 1);
+	ll div=inv(ra)*inv(rb)%mod;
+	a.resize(oa);
+	for (int i=0; i<oa; i++)
+	{
+		a[i].resize(ob);
+		for (int j=0; j<ob; j++)
+			a[i][j]=(a[i][j]*div)%mod;
+	}
+	return a;
+}
+
+vll power_projection(const vll &a, const vll &b, int n)
+{
+	if (a.empty() || b.empty() || !n)
+		return vll(n);
+	vector<vll> ta{a};
+	vector<vll> tb{{1}, b};
+	reverse(ta[0].begin(), ta[0].end());
+	tb[0].resize(a.size());
+	tb[1].resize(a.size());
+	for (int i=0; i<(int)a.size(); i++)
+		tb[1][i]=(mod-tb[1][i])%mod;
+	while((int)ta[0].size()>1)
+	{
+		int r=ta[0].size();
+		auto rb=tb;
+		for (int i=0; i<(int)rb.size(); i++)
+			for (int j=1; j<(int)rb[0].size(); j+=2)
+				rb[i][j]=(mod-rb[i][j])%mod;
+		auto pa=ta*rb;
+		auto pb=tb*rb;
+		ta.resize(pa.size());
+		tb.resize(pb.size());
+		for (int i=0; i<(int)ta.size(); i++)
+		{
+			ta[i].resize((r+1)/2);
+			for (int j=0; j<(r+1)/2; j++)
+				ta[i][j]=pa[i][2*j+1-(r&1)];
+		}
+		for (int i=0; i<(int)tb.size(); i++)
+		{
+			tb[i].resize((r+1)/2);
+			for (int j=0; j<(r+1)/2; j++)
+				tb[i][j]=pb[i][2*j];
+		}
+	}
+	vll pa=transpose(ta)[0];
+	vll pb=transpose(tb)[0];
+	pa.resize(n);
+	pb.resize(n);
+	vll ret=pa*inverse(pb);
+	ret.resize(n);
+	return ret;
 }
