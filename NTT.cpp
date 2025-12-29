@@ -172,7 +172,7 @@ vll inverse(const vll &a)//a[0]!=0
 	vll p=a;
 	p.resize(r>>1);
 	vll q=inverse(p);
-	return modulo(q*(vll{2}-a*q), r);
+	return modulo(q*(vll{2}-a*q), a.size());
 }
 
 vll logarithm(const vll &a)//a[0]!=0
@@ -194,7 +194,7 @@ vll exponent(const vll &a)//a[0]=0
 	vll q=exponent(p);
 	vll qp=q;
 	qp.resize(r);
-	return modulo(q*(vll{1}+a-logarithm(qp)), r);
+	return modulo(q*(vll{1}+a-logarithm(qp)), a.size());
 }
 
 pair<vll,vll> divide(const vll a, const vll &b)//{div, mod}
@@ -357,4 +357,47 @@ vll power_projection(const vll &a, const vll &b, int n)
 	vll ret=pa*inverse(pb);
 	ret.resize(n);
 	return ret;
+}
+
+vll sums_of_root_powers(const vll &a, int n)
+{
+	if (a.empty() || !n)
+		return vll(n, 0);
+	vll b=a;
+	reverse(b.begin(), b.end());
+	if (n>(int)a.size())
+		b.resize(n-1);
+	vll ret=vll{0}-derivative(b)*inverse(b);
+	ret.resize(n-1);
+	ret.insert(ret.begin(), (int)a.size()-1);
+	return ret;
+}
+
+vll compositional_inverse(vll a)
+{
+	if ((int)a.size()<=1)
+		return vll(a.size());
+	int n=a.size();
+	ll c=inv(a[1]);
+	for (int i=0; i<n; i++)
+		a[i]=a[i]*c%mod;
+	vll vals(n);
+	vals[n-1]=1;
+	vll b=power_projection(vals, a, n);
+	for (int i=1; i<n; i++)
+		b[i]=b[i]*(n-1)%mod*inv(i)%mod;
+	reverse(b.begin(), b.end());
+	b=logarithm(b);
+	b.resize(n);
+	for (int i=0; i<n; i++)
+		b[i]=b[i]*(mod-inv(n-1))%mod;
+	b=exponent(b);
+	b.insert(b.begin(), 0);
+	ll w=1;
+	for (ll &i : b)
+	{
+		i=i*w%mod;
+		w=w*c%mod;
+	}
+	return modulo(b, n);
 }
