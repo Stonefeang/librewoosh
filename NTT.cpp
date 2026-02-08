@@ -467,3 +467,87 @@ pair<vll,pair<vll,vll>> gcd(const vll &a, const vll &b)//first=a*second.first+b*
 	auto take2=gcd(nb, na);
 	return {take2.first, {take1[0][0]*take2.second.second+take1[1][0]*take2.second.first, take1[0][1]*take2.second.second+take1[1][1]*take2.second.first}};
 }
+
+vll power_modulo(vll a, ll expo, vll m)
+{
+	vll ret=divide({1}, m).second;
+	while(expo)
+	{
+		if (expo&1)
+			ret=divide(ret*a, m).second;
+		expo>>=1;
+		if (expo)
+			a=divide(a*a, m).second;
+	}
+	return ret;
+}
+
+vll root_finding(const vll &a, bool repeated)
+{
+	vll ret;
+	function<void(vll)> search=[&](vll b)
+	{
+		if ((int)b.size()<=1)
+			return;
+		if ((int)b.size()==2)
+		{
+			ret.push_back((mod-b[0])*inv(b[1])%mod);
+			return;
+		}
+		vll c;
+		for (int i=1; i<(int)b.size(); i++)
+			c.push_back(rand()%mod);
+		c=power_modulo(c, (mod-1)/2, b)-vll{1};
+		if (c.empty())
+		{
+			search(b);
+			return;
+		}
+		c=gcd(c, b).first;
+		search(c);
+		search(divide(b, c).first);
+	};
+	function<void(vll, vll, int)> extract=[&](vll b, vll prod, int expo)
+	{
+		prod=divide(prod, b).second;
+		vector<vll> powers{prod};
+		for (int i=1; i<expo; i++)
+		{
+			vll c=divide(powers.back()*powers.back(), b).second;
+			powers.push_back(c);
+		}
+		for (int i=expo; i>=0; i--)
+		{
+			vll g=gcd(b, powers[max(0, i-1)]).first;
+			if (!i)
+			{
+				search(g);
+			}
+			else
+			{
+				extract(divide(b, g).first, prod, i-1);
+				b=g;
+			}
+		}
+	};
+	int expo=0;
+	while((1<<expo)<(int)a.size()-1)
+		expo++;
+	extract(a, power_modulo({0, 1}, mod, a)-vll{0, 1}, repeated ? expo : 0);
+	sort(ret.begin(), ret.end());
+	return ret;
+}
+
+vll product(const vector<vll> &seq)
+{
+	function<vll(int, int)> dc=[&](int a, int b)
+	{
+		if (a>b)
+			return vll{1};
+		if (a==b)
+			return seq[a];
+		int s=(a+b)>>1;
+		return dc(a, s)*dc(s+1, b);
+	};
+	return dc(0, (int)seq.size()-1);
+}
