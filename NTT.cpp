@@ -87,6 +87,14 @@ struct ntt
 	{
 		if (a.empty() || b.empty())
 			return {};
+		if (min(a.size(), b.size())<=64)
+		{
+			vll ret(a.size()+b.size()-1);
+			for (int i=0; i<(int)a.size(); i++)
+				for (int j=0; j<(int)b.size(); j++)
+					ret[i+j]=(ret[i+j]+a[i]*b[j])%mod;
+			return ret;
+		}
 		int n=lift((int)a.size()+(int)b.size()-1);
 		a.resize(n);
 		b.resize(n);
@@ -154,7 +162,7 @@ vll derivative(const vll &a)
 	return norm(ret);
 }
 
-vll integral(const vll &a)
+vll integrate(const vll &a)
 {
 	vll ret((int)a.size()+1);
 	for (int i=1; i<(int)ret.size(); i++)
@@ -179,7 +187,7 @@ vll logarithm(const vll &a)//a[0]!=0
 {
 	vll deri=derivative(a);
 	vll inve=inverse(a);
-	return modulo(integral(deri*inve), a.size());
+	return modulo(integrate(deri*inve), a.size());
 }
 
 vll exponent(const vll &a)//a[0]=0
@@ -400,4 +408,62 @@ vll compositional_inverse(vll a)
 		w=w*c%mod;
 	}
 	return modulo(b, n);
+}
+
+vector<vector<vll>> half_gcd(vll a, vll b)
+{
+	vll oa=a;
+	vll ob=b;
+	vector<vll> mula{{1}, {}};
+	vector<vll> mulb{{}, {1}};
+	int goal=a.size()/2;
+	int max_step=((int)a.size()-goal+1)/2;
+	while(1)
+	{
+		if ((int)a.size()<=goal)
+			return {mulb, mula};
+		{
+			auto take=divide(b, a);
+			b=take.second;
+			mulb[0]=mulb[0]-mula[0]*take.first;
+			mulb[1]=mulb[1]-mula[1]*take.first;
+		}
+		if ((int)b.size()<=goal)
+			return {mula, mulb};
+		int r=a.size();
+		int goal_now=max(goal, r-max_step);
+		int sta=max(2*goal_now-r, 0);
+		vll na, nb;
+		for (int i=sta; i<(int)a.size(); i++)
+			na.push_back(a[i]);
+		for (int i=sta; i<(int)b.size(); i++)
+			nb.push_back(b[i]);
+		{
+			auto take=half_gcd(na, nb);
+			na=take[0][0]*a+take[0][1]*b;
+			nb=take[1][0]*a+take[1][1]*b;
+			a=nb;
+			b=na;
+			vector<vll> nmula={take[0][0]*mula[0]+take[0][1]*mulb[0], take[0][0]*mula[1]+take[0][1]*mulb[1]};
+			vector<vll> nmulb={take[1][0]*mula[0]+take[1][1]*mulb[0], take[1][0]*mula[1]+take[1][1]*mulb[1]};
+			mula=nmulb;
+			mulb=nmula;
+		}
+	}
+};
+
+pair<vll,pair<vll,vll>> gcd(const vll &a, const vll &b)//first=a*second.first+b*second.second
+{
+	if (a.empty())
+	{
+		if (b.empty())
+			return {{}, {{}, {}}};
+		ll x=inv(b.back());
+		return {norm(b*vll{x}), {{}, norm({x})}};
+	}
+	auto take1=half_gcd(a, b);
+	vll na=a*take1[0][0]+b*take1[0][1];
+	vll nb=a*take1[1][0]+b*take1[1][1];
+	auto take2=gcd(nb, na);
+	return {take2.first, {take1[0][0]*take2.second.second+take1[1][0]*take2.second.first, take1[0][1]*take2.second.second+take1[1][1]*take2.second.first}};
 }
