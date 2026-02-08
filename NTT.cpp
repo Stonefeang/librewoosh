@@ -378,17 +378,6 @@ vll composition(const vll &a, const vll &b)
 			reverse(a[i].begin(), a[i].end());
 		return a;
 	};
-	function<vector<vll>(vector<vll>, vector<vll>)> multiply_by_reversed=[&](const vector<vll> &a, const vector<vll> &b)
-	{
-		if (a.empty() || b.empty())
-			return a;
-		auto d=a*reverse_2d(b);
-		auto ret=a;
-		for (int i=0; i<(int)a.size(); i++)
-			for (int j=0; j<(int)a[0].size(); j++)
-				ret[i][j]=d[i+(int)b.size()-1][j+(int)b[0].size()-1];
-		return ret;
-	};
 	vector<vll> tb{{1}, b};
 	tb[0].resize(a.size());
 	tb[1].resize(a.size());
@@ -405,7 +394,7 @@ vll composition(const vll &a, const vll &b)
 				rb[i][j]=(mod-rb[i][j])%mod;
 		auto pb=tb*rb;
 		tb.resize(pb.size());
-		rem.push_back(rb);
+		rem.push_back(reverse_2d(rb));
 		bits.push_back(1-(r&1));
 		for (int i=0; i<(int)tb.size(); i++)
 		{
@@ -417,21 +406,39 @@ vll composition(const vll &a, const vll &b)
 	vll pb=transpose(tb)[0];
 	pb=inverse(pb);
 	pb.resize(a.size());
-	tb=transpose({pb});
-	auto ta=transpose({a});
-	ta=multiply_by_reversed(ta, tb);
+	reverse(pb.begin(), pb.end());
+	vll c=a*pb;
+	c.resize(2*a.size()-1);
+	reverse(c.begin(), c.end());
+	c.resize(a.size());
+	reverse(c.begin(), c.end());
+	auto ta=transpose({c});
 	int lowering=0;
 	for (auto &i : rem)
 		lowering+=i.size()-1;
+	vector<vll> pa;
 	for (int h=(int)bits.size()-1; h>=0; h--)
 	{
 		auto &mul=rem[h];
 		int bit=bits[h];
-		vector<vll> pa(ta.size(), vll((int)ta[0].size()*2-1+bit));
+		pa.resize(ta.size());
 		for (int i=0; i<(int)ta.size(); i++)
+		{
+			pa[i].resize((int)ta[0].size()*2-1+bit);
+			fill(pa[i].begin(), pa[i].end(), 0);
 			for (int j=0; j<(int)ta[i].size(); j++)
 				pa[i][2*j+bit]=ta[i][j];
-		ta=multiply_by_reversed(pa, mul);
+		}
+		int ra=pa.size();
+		int rb=pa[0].size();
+		pa=pa*mul;
+		ta.resize(ra);
+		for (int i=0; i<ra; i++)
+		{
+			ta[i].resize(rb);
+			for (int j=0; j<rb; j++)
+				ta[i][j]=pa[i+(int)mul.size()-1][j+(int)mul[0].size()-1];
+		}
 		lowering-=mul.size()-1;
 		ta.resize(lowering+1);
 	}
