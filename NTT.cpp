@@ -367,6 +367,79 @@ vll power_projection(const vll &a, const vll &b, int n)
 	return ret;
 }
 
+vll composition(const vll &a, const vll &b)
+{
+	if (a.empty())
+		return {};
+	function<vector<vll>(vector<vll>)> reverse_2d=[&](vector<vll> a)
+	{
+		reverse(a.begin(), a.end());
+		for (int i=0; i<(int)a.size(); i++)
+			reverse(a[i].begin(), a[i].end());
+		return a;
+	};
+	function<vector<vll>(vector<vll>, vector<vll>)> multiply_by_reversed=[&](const vector<vll> &a, const vector<vll> &b)
+	{
+		if (a.empty() || b.empty())
+			return a;
+		auto d=a*reverse_2d(b);
+		auto ret=a;
+		for (int i=0; i<(int)a.size(); i++)
+			for (int j=0; j<(int)a[0].size(); j++)
+				ret[i][j]=d[i+(int)b.size()-1][j+(int)b[0].size()-1];
+		return ret;
+	};
+	vector<vll> tb{{1}, b};
+	tb[0].resize(a.size());
+	tb[1].resize(a.size());
+	for (int i=0; i<(int)a.size(); i++)
+		tb[1][i]=(mod-tb[1][i])%mod;
+	vector<vector<vll>> rem;
+	vi bits;
+	while((int)tb[0].size()>1)
+	{
+		int r=tb[0].size();
+		auto rb=tb;
+		for (int i=0; i<(int)rb.size(); i++)
+			for (int j=1; j<(int)rb[0].size(); j+=2)
+				rb[i][j]=(mod-rb[i][j])%mod;
+		auto pb=tb*rb;
+		tb.resize(pb.size());
+		rem.push_back(rb);
+		bits.push_back(1-(r&1));
+		for (int i=0; i<(int)tb.size(); i++)
+		{
+			tb[i].resize((r+1)/2);
+			for (int j=0; j<(r+1)/2; j++)
+				tb[i][j]=pb[i][2*j];
+		}
+	}
+	vll pb=transpose(tb)[0];
+	pb=inverse(pb);
+	pb.resize(a.size());
+	tb=transpose({pb});
+	auto ta=transpose({a});
+	ta=multiply_by_reversed(ta, tb);
+	int lowering=0;
+	for (auto &i : rem)
+		lowering+=i.size()-1;
+	for (int h=(int)bits.size()-1; h>=0; h--)
+	{
+		auto &mul=rem[h];
+		int bit=bits[h];
+		vector<vll> pa(ta.size(), vll((int)ta[0].size()*2-1+bit));
+		for (int i=0; i<(int)ta.size(); i++)
+			for (int j=0; j<(int)ta[i].size(); j++)
+				pa[i][2*j+bit]=ta[i][j];
+		ta=multiply_by_reversed(pa, mul);
+		lowering-=mul.size()-1;
+		ta.resize(lowering+1);
+	}
+	ta[0].resize(a.size());
+	reverse(ta[0].begin(), ta[0].end());
+	return norm(ta[0]);
+}
+
 vll sums_of_root_powers(const vll &a, int n)
 {
 	if (a.empty() || !n)
