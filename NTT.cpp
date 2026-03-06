@@ -631,3 +631,24 @@ vll product(const vector<vll> &seq)
 	};
 	return dc(0, (int)seq.size()-1);
 }
+
+vll taylor_shift(vll a, ll c)
+{
+	int n=a.size();
+	vll fac(n, 1), ofac(n, 1), b(n, 1);
+	for (int i=1; i<n; i++)
+	{
+		fac[i]=fac[i-1]*i%mod;
+		ofac[i]=ofac[i-1]*inv(i)%mod;
+		b[i]=b[i-1]*inv(i)%mod*c%mod;
+	}
+	for (int i=0; i<n; i++)
+		a[i]=a[i]*fac[i]%mod;
+	reverse(a.begin(), a.end());
+	a=a*b;
+	a.resize(n);
+	reverse(a.begin(), a.end());
+	for (int i=0; i<n; i++)
+		a[i]=a[i]*ofac[i]%mod;
+	return norm(a);
+}
